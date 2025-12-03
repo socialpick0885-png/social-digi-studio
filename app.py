@@ -1,43 +1,29 @@
-import os
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify
 from video_generator import generate_slideshow_video
+import uuid
+import os
 
-app = Flask(__name__, static_folder="static", static_url_path="")
+app = Flask(__name__)
 
-@app.route("/")
-def index():
-    # Serve the frontend from /static/index.html
-    return send_from_directory(app.static_folder, "index.html")
-
-
-@app.route("/api/generate-video", methods=["POST"])
-def api_generate_video():
-    data = request.get_json() or {}
-    script = (data.get("script") or "").strip()
+@app.route("/generate", methods=["POST"])
+def generate():
+    data = request.json
+    script = data.get("script")
 
     if not script:
-        return jsonify({"status": "error", "message": "Script is required."}), 400
+        return jsonify({"error": "Script missing"}), 400
 
-    try:
-        video_path = generate_slideshow_video(script)
+    filename = f"static/video_{uuid.uuid4()}.mp4"
+    video_path = generate_slideshow_video(script, filename)
 
-        # Convert absolute path -> relative URL
-        rel_path = os.path.relpath(video_path, os.getcwd())
-        url = "/" + rel_path.replace("\\", "/")
+    return jsonify({
+        "status": "ok",
+        "videoUrl": request.host_url + video_path
+    })
 
-        return jsonify({"status": "ok", "videoUrl": url})
-    except Exception as e:
-        print("Error generating video:", e, flush=True)
-        return jsonify({"status": "error", "message": "Failed to generate video."}), 500
-
-
-# Serve files from the media/ folder (important!)
-@app.route("/media/<path:filename>")
-def media_files(filename):
-    media_path = os.path.join(os.getcwd(), "media")
-    return send_from_directory(media_path, filename)
-
+@app.route("/")
+def home():
+    return "Video generator is running!"
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port)
+    app.run()
