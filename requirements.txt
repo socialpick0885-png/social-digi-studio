@@ -1,5 +1,6 @@
 Flask
-Flask-Cors
+flask-cors
 requests
 gTTS
-ffmpeg-python
+imageio-ffmpeg
+gunicorn
