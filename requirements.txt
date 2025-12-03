@@ -6,4 +6,5 @@ imageio==2.31.1
 imageio-ffmpeg==0.4.9
 decorator==5.1.1
 proglog==0.1.10
+numpy==1.26.4
 gTTS
